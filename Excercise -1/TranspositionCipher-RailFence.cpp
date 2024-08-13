@@ -39,8 +39,6 @@ string decryptRailFence(string cipherText, int key)
 
     int dir = 1, row = 0;
     int index = 0;
-
-    // Mark the positions on the rail matrix
     for (int i = 0; i < n; i++)
     {
         rail[row][i] = '*';
@@ -48,8 +46,6 @@ string decryptRailFence(string cipherText, int key)
         if (row == 0 || row == key - 1)
             dir *= -1;
     }
-
-    // Place characters in the positions marked
     for (int r = 0; r < key; r++)
     {
         for (int i = 0; i < n; i++)
@@ -63,8 +59,6 @@ string decryptRailFence(string cipherText, int key)
 
     string plainText;
     row = 0, dir = 1;
-
-    // Read the matrix to reconstruct the plaintext
     for (int i = 0; i < n; i++)
     {
         plainText += rail[row][i];
