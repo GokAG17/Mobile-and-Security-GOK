@@ -1,0 +1,172 @@
+This code implements a transposition cipher, a type of encryption where the characters of the plaintext are shuffled based on a keyword. Let's break down the code line by line, with a dry run example.
+
+### Key Concepts:
+
+- **Transposition Cipher:** A method of encryption where the positions of the characters in the plaintext are shifted according to a certain system, which is defined by the key.
+- **Padding:** Adding extra characters (here, 'X') to the plaintext to make it fit into a grid with dimensions based on the key length.
+
+### Code Walkthrough:
+
+#### Header Files and Namespace
+```cpp
+#include <bits/stdc++.h>
+using namespace std;
+```
+- `#include <bits/stdc++.h>`: Includes all standard library headers. This is commonly used in competitive programming for convenience.
+- `using namespace std;`: Allows you to use the standard namespace directly without prefixing `std::` before every standard function or object.
+
+#### Function: `padText`
+```cpp
+string padText(const string &text, int keyLength) {
+    string paddedText = text;
+    int extraChars = text.length() % keyLength;
+    if (extraChars != 0) {
+        paddedText.append(keyLength - extraChars, 'X');  
+    }
+    return paddedText;
+}
+```
+- **Purpose:** Pads the input text with 'X' so that its length is a multiple of the key length.
+- `const string &text`: Takes the input text as a constant reference.
+- `int keyLength`: The length of the key used for encryption.
+- `int extraChars = text.length() % keyLength;`: Calculates the number of characters needed to pad the text.
+- `if (extraChars != 0)`: If the text length isn't a perfect multiple of the key length, it pads the text with 'X'.
+- `paddedText.append(keyLength - extraChars, 'X');`: Adds the necessary number of 'X' characters.
+- **Return:** The padded text.
+
+#### Function: `encrypt`
+```cpp
+string encrypt(string text, string key) {
+    int keyLength = key.length();
+    text = padText(text, keyLength);
+
+    int numRows = text.length() / keyLength;
+    vector<string> grid(numRows, string(keyLength, ' '));
+
+    for (int i = 0; i < text.length(); i++) {
+        grid[i / keyLength][i % keyLength] = text[i];
+    }
+
+    vector<int> order(keyLength);
+    iota(order.begin(), order.end(), 0);
+    sort(order.begin(), order.end(), [&](int i, int j) { return key[i] < key[j]; });
+
+    string cipherText;
+    for (int col : order) {
+        for (int row = 0; row < numRows; row++) {
+            cipherText += grid[row][col];
+        }
+    }
+
+    return cipherText;
+}
+```
+- **Purpose:** Encrypts the text using the transposition cipher.
+- `text = padText(text, keyLength);`: Pads the text to ensure it fits into the grid.
+- `int numRows = text.length() / keyLength;`: Calculates the number of rows needed for the grid.
+- `vector<string> grid(numRows, string(keyLength, ' '));`: Creates a 2D grid (vector of strings) to hold the characters of the text.
+- **Filling the grid:**
+  - `grid[i / keyLength][i % keyLength] = text[i];`: Fills the grid row by row with characters from the text.
+- **Sorting the key:**
+  - `vector<int> order(keyLength);`: Creates a vector of column indices.
+  - `iota(order.begin(), order.end(), 0);`: Initializes the `order` vector with indices `[0, 1, 2, ...]`.
+  - `sort(order.begin(), order.end(), [&](int i, int j) { return key[i] < key[j]; });`: Sorts the column indices based on the lexicographical order of the characters in the key.
+- **Creating the ciphertext:**
+  - Loops through the columns in the sorted order and concatenates characters from each row to form the ciphertext.
+- **Return:** The encrypted text (ciphertext).
+
+#### Function: `decrypt`
+```cpp
+string decrypt(string cipherText, string key) {
+    int keyLength = key.length();
+    int numRows = cipherText.length() / keyLength;
+    vector<string> grid(numRows, string(keyLength, ' '));
+
+    vector<int> order(keyLength);
+    iota(order.begin(), order.end(), 0);
+    sort(order.begin(), order.end(), [&](int i, int j) { return key[i] < key[j]; });
+
+    int index = 0;
+    for (int col : order) {
+        for (int row = 0; row < numRows; row++) {
+            grid[row][col] = cipherText[index++];
+        }
+    }
+
+    string plainText;
+    for (int row = 0; row < numRows; row++) {
+        plainText += grid[row];
+    }
+
+    plainText.erase(remove(plainText.begin(), plainText.end(), 'X'), plainText.end());
+
+    return plainText;
+}
+```
+- **Purpose:** Decrypts the ciphertext back to the original plaintext.
+- `int numRows = cipherText.length() / keyLength;`: Calculates the number of rows in the grid.
+- **Reconstructing the grid:**
+  - `grid[row][col] = cipherText[index++];`: Fills the grid column by column according to the sorted order of the key.
+- **Reconstructing the plaintext:**
+  - Concatenates characters from each row of the grid to form the plaintext.
+  - `plainText.erase(remove(plainText.begin(), plainText.end(), 'X'), plainText.end());`: Removes the padding 'X' characters added during encryption.
+- **Return:** The decrypted plaintext.
+
+#### `main` Function:
+```cpp
+int main() {
+    string text, key;
+
+    cout << "Enter the text to be encrypted: ";
+    getline(cin, text);
+    
+    cout << "Enter the key (a word): ";
+    getline(cin, key);
+
+    string encrypted = encrypt(text, key);
+    cout << "Encrypted Text: " << encrypted << endl;
+
+    string decrypted = decrypt(encrypted, key);
+    cout << "Decrypted Text: " << decrypted << endl;
+
+    return 0;
+}
+```
+- **Purpose:** Drives the program, taking input from the user and displaying the encrypted and decrypted text.
+- `getline(cin, text);`: Takes the input text from the user.
+- `getline(cin, key);`: Takes the key from the user.
+- `encrypt(text, key);`: Encrypts the input text using the key.
+- `decrypt(encrypted, key);`: Decrypts the encrypted text using the same key.
+- **Output:** Displays the encrypted and decrypted text.
+
+### Dry Run Example:
+
+- **Input:**
+  - `text = "HELLO WORLD"`
+  - `key = "KEY"`
+
+- **Step 1:** Padding the text:
+  - Key length = 3.
+  - Text after padding: `"HELLO WORLDXX"` (Length 12, padded with 2 'X's).
+
+- **Step 2:** Create the grid:
+  ```
+  H E L
+  L O W
+  O R L
+  D X X
+  ```
+
+- **Step 3:** Sort the key:
+  - Original key order: `K E Y` → Index: `[0, 1, 2]`
+  - Sorted key order: `E K Y` → Index: `[1, 0, 2]`
+
+- **Step 4:** Generate the ciphertext:
+  - Column order: `1 0 2`
+  - Ciphertext: `"EORHLWLXOLXD"`
+
+- **Step 5:** Decrypt the ciphertext:
+  - Reconstruct the grid and read row by row.
+  - Remove padding 'X' to get `"HELLO WORLD"`.
+
+This process demonstrates how the transposition cipher works with padding, grid formation, and key-based columnar transposition.

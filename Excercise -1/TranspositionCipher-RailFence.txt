@@ -1,0 +1,174 @@
+This C++ program implements the **Rail Fence Cipher**, a type of transposition cipher that arranges the plaintext in a zigzag pattern across multiple "rails" and then reads it off row by row to create the ciphertext. The program can also decrypt the ciphertext back into the original plaintext using the same key.
+
+### Code Explanation
+
+#### 1. **Including Header Files**
+```cpp
+#include <iostream>
+#include <string>
+#include <vector>
+
+using namespace std;
+```
+- `#include <iostream>`: Allows for input and output operations.
+- `#include <string>`: Provides support for string operations.
+- `#include <vector>`: Provides support for using the `vector` container, which is used to store rows of characters.
+
+#### 2. **Encrypting with the Rail Fence Cipher**
+```cpp
+string encryptRailFence(string text, int key)
+{
+    if (key <= 1)
+        return text;
+
+    vector<string> rail(key);
+    int dir = 1, row = 0;
+
+    for (char c : text)
+    {
+        rail[row] += c;
+        row += dir;
+        if (row == 0 || row == key - 1)
+            dir *= -1;
+    }
+
+    string cipherText;
+    for (const auto &line : rail)
+    {
+        cipherText += line;
+    }
+
+    return cipherText;
+}
+```
+- **Purpose**: This function encrypts a given text using the Rail Fence Cipher with a specified number of rails (key).
+- **Parameters**:
+  - `text`: The plaintext string to be encrypted.
+  - `key`: The number of rails to use in the cipher.
+- **Explanation**:
+  - **Base Case**: If the key is 1 or less, the function simply returns the text, as no encryption is necessary.
+  - **Initialization**:
+    - A `vector<string>` named `rail` is created, where each element represents a row or rail in the zigzag pattern.
+    - `dir` determines the direction of movement (downward or upward).
+    - `row` keeps track of the current rail position.
+  - **Encryption Loop**:
+    - The function iterates through each character in the input text, placing it in the current row of `rail`.
+    - The `row` is updated based on `dir`. When the top or bottom rail is reached, `dir` is reversed to change direction.
+  - **Combining the Rails**:
+    - The rows in `rail` are concatenated to form the final `cipherText`, which is then returned.
+
+#### 3. **Decrypting with the Rail Fence Cipher**
+```cpp
+string decryptRailFence(string cipherText, int key)
+{
+    if (key <= 1)
+        return cipherText;
+
+    int n = cipherText.size();
+    vector<string> rail(key, string(n, '\n'));
+
+    int dir = 1, row = 0;
+    int index = 0;
+    for (int i = 0; i < n; i++)
+    {
+        rail[row][i] = '*';
+        row += dir;
+        if (row == 0 || row == key - 1)
+            dir *= -1;
+    }
+    for (int r = 0; r < key; r++)
+    {
+        for (int i = 0; i < n; i++)
+        {
+            if (rail[r][i] == '*' && index < n)
+            {
+                rail[r][i] = cipherText[index++];
+            }
+        }
+    }
+
+    string plainText;
+    row = 0, dir = 1;
+    for (int i = 0; i < n; i++)
+    {
+        plainText += rail[row][i];
+        row += dir;
+        if (row == 0 || row == key - 1)
+            dir *= -1;
+    }
+
+    return plainText;
+}
+```
+- **Purpose**: This function decrypts a given Rail Fence Cipher text using the same key that was used for encryption.
+- **Parameters**:
+  - `cipherText`: The encrypted string to be decrypted.
+  - `key`: The number of rails used in the cipher.
+- **Explanation**:
+  - **Base Case**: If the key is 1 or less, the function simply returns the cipherText, as no decryption is necessary.
+  - **Initialization**:
+    - `rail` is initialized with the same number of rows (rails) as the key, and each row is filled with placeholder characters (`'\n'`).
+    - The `row` and `dir` variables are used in the same way as during encryption.
+  - **Marking the Rail Positions**:
+    - The function first marks the positions in `rail` where characters should be placed by iterating over the length of the cipher text. These positions are marked with `'*'`.
+  - **Filling the Rails**:
+    - The function then fills the marked positions with the characters from the `cipherText`, row by row, using an `index` to track the position in the cipher text.
+  - **Reconstructing the Plain Text**:
+    - Finally, the function reads the characters in a zigzag pattern (the same way they were originally written) to reconstruct the original plaintext.
+
+#### 4. **Main Function**
+```cpp
+int main()
+{
+    string text;
+    int key;
+
+    cout << "Enter the text to be encrypted: ";
+    getline(cin, text);
+
+    cout << "Enter the key (number of rails): ";
+    cin >> key;
+
+    string encrypted = encryptRailFence(text, key);
+    cout << "Encrypted Text: " << encrypted << endl;
+
+    string decrypted = decryptRailFence(encrypted, key);
+    cout << "Decrypted Text: " << decrypted << endl;
+
+    return 0;
+}
+```
+- **Purpose**: The main function handles input, encryption, and decryption.
+- **Steps**:
+  1. **Input**:
+     - The user is prompted to enter the text to be encrypted.
+     - The user then inputs the value for the `key`, which determines the number of rails used in the cipher.
+  2. **Encryption**:
+     - The program calls the `encryptRailFence` function to encrypt the input text using the provided key.
+     - The encrypted text is printed.
+  3. **Decryption**:
+     - The program calls the `decryptRailFence` function to decrypt the encrypted text using the same key.
+     - The decrypted text is printed to verify correctness.
+
+### Example Execution
+
+Suppose the input is:
+```
+Enter the text to be encrypted: HelloWorld
+Enter the key (number of rails): 3
+```
+
+- **Encryption**:
+  - The text `"HelloWorld"` is written in a zigzag pattern across 3 rails:
+    ```
+    H   o   W   l
+     e l o r d
+      l   o   l
+    ```
+  - Reading row by row, the encrypted text might be `"HorelWllod"`.
+
+- **Decryption**:
+  - The encrypted text `"HorelWllod"` is decrypted back to `"HelloWorld"` by reconstructing the zigzag pattern.
+
+### Summary
+This program demonstrates how to implement the Rail Fence Cipher, including both encryption and decryption. The Rail Fence Cipher is a simple transposition cipher that rearranges the characters of the plaintext according to a zigzag pattern. The main function provides a simple interface for users to encrypt and decrypt their text using a specified number of rails.

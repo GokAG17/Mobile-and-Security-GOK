@@ -1,176 +1,73 @@
-#include <iostream>
-#include <vector>
-#include <string>
+#include<bits/stdc++.h>
 
 using namespace std;
 
-void getKeyMatrix(string key, vector<vector<int>>& keyMatrix, int n) {
+void getKeyMatrix(string key, vector<vector<int>> &keyMatrix, int size) {
     int k = 0;
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < n; j++) {
-            keyMatrix[i][j] = (key[k]) % 65;
+    for (int i = 0; i < size; i++) {
+        for (int j = 0; j < size; j++) {
+            keyMatrix[i][j] = (key[k] - 'A') % 26;
             k++;
         }
     }
 }
 
-void encrypt(vector<vector<int>>& keyMatrix, string& message, string& cipherText, int n) {
-    vector<int> messageVector(n);
-
-    for (int i = 0; i < message.length(); i += n) {
-        for (int j = 0; j < n; j++) {
-            messageVector[j] = message[i + j] % 65;
+vector<int> multiplyMatrix(vector<vector<int>> &keyMatrix, vector<int> &messageVector, int size) {
+    vector<int> cipherVector(size, 0);
+    for (int i = 0; i < size; i++) {
+        for (int j = 0; j < size; j++) {
+            cipherVector[i] += keyMatrix[i][j] * messageVector[j];
         }
-
-        vector<int> cipherVector(n, 0);
-
-        for (int x = 0; x < n; x++) {
-            for (int y = 0; y < n; y++) {
-                cipherVector[x] += keyMatrix[x][y] * messageVector[y];
-            }
-            cipherVector[x] = cipherVector[x] % 26;
-        }
-
-        for (int j = 0; j < n; j++) {
-            cipherText += cipherVector[j] + 65;
-        }
+        cipherVector[i] %= 26;  
     }
+    return cipherVector;
 }
 
-void decrypt(vector<vector<int>>& inverseKeyMatrix, string& cipherText, string& decryptedText, int n) {
-    vector<int> cipherVector(n);
+string HillCipher(string message, string key) {
+    int size = sqrt(key.length());
+    vector<vector<int>> keyMatrix(size, vector<int>(size));
+    
+    getKeyMatrix(key, keyMatrix, size);
 
-    for (int i = 0; i < cipherText.length(); i += n) {
-        for (int j = 0; j < n; j++) {
-            cipherVector[j] = cipherText[i + j] % 65;
-        }
-
-        vector<int> decryptedVector(n, 0);
-
-        for (int x = 0; x < n; x++) {
-            for (int y = 0; y < n; y++) {
-                decryptedVector[x] += inverseKeyMatrix[x][y] * cipherVector[y];
-            }
-            decryptedVector[x] = decryptedVector[x] % 26;
-        }
-
-        for (int j = 0; j < n; j++) {
-            decryptedText += decryptedVector[j] + 65;
-        }
+    while (message.length() % size != 0) {
+        message += 'X';
     }
-}
 
-int modInverse(int a, int m) {
-    a = a % m;
-    for (int x = 1; x < m; x++) {
-        if ((a * x) % m == 1)
-            return x;
-    }
-    return 1; 
-}
-
-void getCofactorMatrix(vector<vector<int>>& matrix, vector<vector<int>>& cofactorMatrix, int p, int q, int n) {
-    int i = 0, j = 0;
-    for (int row = 0; row < n; row++) {
-        for (int col = 0; col < n; col++) {
-            if (row != p && col != q) {
-                cofactorMatrix[i][j++] = matrix[row][col];
-                if (j == n - 1) {
-                    j = 0;
-                    i++;
-                }
-            }
+    string cipherText = "";
+    
+    for (int i = 0; i < message.length(); i += size) {
+        vector<int> messageVector(size);
+        for (int j = 0; j < size; j++) {
+            messageVector[j] = (message[i + j] - 'A') % 26;
+        }
+        
+        vector<int> cipherVector = multiplyMatrix(keyMatrix, messageVector, size);
+        
+        for (int j = 0; j < size; j++) {
+            cipherText += (cipherVector[j] + 'A');
         }
     }
-}
 
-int determinant(vector<vector<int>>& matrix, int n) {
-    if (n == 1)
-        return matrix[0][0];
-
-    int det = 0;
-    vector<vector<int>> cofactorMatrix(n, vector<int>(n));
-
-    int sign = 1;
-    for (int i = 0; i < n; i++) {
-        getCofactorMatrix(matrix, cofactorMatrix, 0, i, n);
-        det += sign * matrix[0][i] * determinant(cofactorMatrix, n - 1);
-        sign = -sign;
-    }
-    return det;
-}
-
-void adjoint(vector<vector<int>>& matrix, vector<vector<int>>& adjMatrix, int n) {
-    if (n == 1) {
-        adjMatrix[0][0] = 1;
-        return;
-    }
-
-    int sign = 1;
-    vector<vector<int>> cofactorMatrix(n, vector<int>(n));
-
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < n; j++) {
-            getCofactorMatrix(matrix, cofactorMatrix, i, j, n);
-            sign = ((i + j) % 2 == 0) ? 1 : -1;
-            adjMatrix[j][i] = (sign * determinant(cofactorMatrix, n - 1)) % 26;
-            if (adjMatrix[j][i] < 0) {
-                adjMatrix[j][i] += 26;
-            }
-        }
-    }
-}
-
-bool inverseKeyMatrix(vector<vector<int>>& matrix, vector<vector<int>>& invMatrix, int n) {
-    int det = determinant(matrix, n);
-    int invDet = modInverse(det, 26);
-    if (invDet == -1)
-        return false;
-
-    vector<vector<int>> adjMatrix(n, vector<int>(n));
-    adjoint(matrix, adjMatrix, n);
-
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < n; j++) {
-            invMatrix[i][j] = (adjMatrix[i][j] * invDet) % 26;
-            if (invMatrix[i][j] < 0) {
-                invMatrix[i][j] += 26;
-            }
-        }
-    }
-    return true;
+    return cipherText;
 }
 
 int main() {
-    int n;
+    string message, key;
 
-    cout << "Enter the size of the key matrix (n x n): ";
-    cin >> n;
+    cout << "Enter the message (uppercase letters only): ";
+    getline(cin, message);
 
-    string key;
-    cout << "Enter the key (length should be " << n * n << "): ";
-    cin >> key;
+    cout << "Enter the key (uppercase letters only, must be a perfect square length): ";
+    getline(cin, key);
 
-    vector<vector<int>> keyMatrix(n, vector<int>(n));
-    getKeyMatrix(key, keyMatrix, n);
-
-    string message;
-    cout << "Enter the message to be encrypted (uppercase, length multiple of " << n << "): ";
-    cin >> message;
-
-    string cipherText;
-    encrypt(keyMatrix, message, cipherText, n);
-    cout << "Encrypted Text: " << cipherText << endl;
-
-    vector<vector<int>> invKeyMatrix(n, vector<int>(n));
-    if (!inverseKeyMatrix(keyMatrix, invKeyMatrix, n)) {
-        cout << "Inverse of the key matrix does not exist. Cannot decrypt." << endl;
+    int size = sqrt(key.length());
+    if (size * size != key.length()) {
+        cout << "Invalid key length. The key length must be a perfect square (e.g., 4, 9, 16, ...)." << endl;
         return 1;
     }
 
-    string decryptedText;
-    decrypt(invKeyMatrix, cipherText, decryptedText, n);
-    cout << "Decrypted Text: " << decryptedText << endl;
+    string cipherText = HillCipher(message, key);
+    cout << "Encrypted Text: " << cipherText << endl;
 
     return 0;
 }

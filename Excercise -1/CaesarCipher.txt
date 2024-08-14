@@ -1,0 +1,117 @@
+This C++ program implements the **Caesar Cipher**, a simple encryption technique where each letter in the plaintext is shifted by a certain number of places down the alphabet. The program includes functions to both encrypt and decrypt text using a provided key.
+
+### Code Explanation
+
+#### 1. **Including Header Files**
+```cpp
+#include <iostream>
+#include <string>
+using namespace std;
+```
+- `#include <iostream>`: Allows for input and output operations.
+- `#include <string>`: Provides support for string operations.
+
+#### 2. **Caesar Cipher Encryption Function**
+```cpp
+string caesarEncrypt(string text, int key)
+{
+    string res = "";
+    for (int i = 0; i < text.size(); i++)
+    {
+        if (isupper(text[i]))
+        {
+            res += char(int(text[i] + key - 65) % 26 + 65);
+        }
+        else
+        {
+            res += char(int(text[i] + key - 97) % 26 + 97);
+        }
+    }
+    return res;
+}
+```
+- **Purpose**: This function encrypts a given string using the Caesar Cipher.
+- **Parameters**:
+  - `text`: The plaintext string to be encrypted.
+  - `key`: The number of positions each letter in the string will be shifted.
+- **Explanation**:
+  - **Initialization**:
+    - `res` is an empty string that will store the encrypted result.
+  - **Encryption Loop**:
+    - The loop iterates over each character in `text`.
+    - If the character is an uppercase letter (`isupper(text[i])`):
+      - The formula `(text[i] + key - 65) % 26 + 65` is used to shift the character by `key` positions in the alphabet, while maintaining the case.
+      - `65` is subtracted to align the character's ASCII value with the alphabet index, and `65` is added back to convert it back to an uppercase letter.
+    - If the character is a lowercase letter:
+      - The same process is applied, but with `97` instead of `65` (since `97` is the ASCII value for 'a').
+    - The shifted character is appended to `res`.
+  - **Return**:
+    - The encrypted string `res` is returned.
+
+#### 3. **Caesar Cipher Decryption Function**
+```cpp
+string caesarDecrypt(string text, int key)
+{
+    return caesarEncrypt(text, 26 - key);
+}
+```
+- **Purpose**: This function decrypts a string that was encrypted using the Caesar Cipher.
+- **Parameters**:
+  - `text`: The encrypted string (ciphertext).
+  - `key`: The key that was used for encryption.
+- **Explanation**:
+  - **Decryption**:
+    - The decryption is done by calling the `caesarEncrypt` function with the same text but using `26 - key` as the key. This effectively reverses the shift applied during encryption, as shifting by `26 - key` positions is equivalent to shifting back by the original `key`.
+  - **Return**:
+    - The decrypted string is returned.
+
+#### 4. **Main Function**
+```cpp
+int main()
+{
+    string text;
+    int key;
+    cout << "Enter the text to encrypt : ";
+    cin >> text;
+    cout << "Enter the key to encrypt : ";
+    cin >> key;
+    string encrypted = caesarEncrypt(text, key);
+    cout << "Encrypted: " << encrypted << endl;
+    cout << "Decrypted: " << caesarDecrypt(encrypted, key) << endl;
+    return 0;
+}
+```
+- **Purpose**: The main function handles user input, encryption, and decryption.
+- **Steps**:
+  1. **Input**:
+     - The user is prompted to enter the text to be encrypted.
+     - The user then inputs the value for the `key`, which determines the shift amount for the cipher.
+  2. **Encryption**:
+     - The program calls the `caesarEncrypt` function to encrypt the input text using the provided key.
+     - The encrypted text is printed.
+  3. **Decryption**:
+     - The program calls the `caesarDecrypt` function to decrypt the encrypted text using the same key.
+     - The decrypted text is printed to verify correctness.
+
+### Example Execution
+
+Suppose the input is:
+```
+Enter the text to encrypt: hello
+Enter the key to encrypt: 3
+```
+
+- **Encryption**:
+  - Each character in the word `"hello"` is shifted by 3 positions in the alphabet:
+    - 'h' -> 'k'
+    - 'e' -> 'h'
+    - 'l' -> 'o'
+    - 'l' -> 'o'
+    - 'o' -> 'r'
+  - The encrypted text would be `"khoor"`.
+
+- **Decryption**:
+  - The program then decrypts `"khoor"` back to `"hello"` by shifting each character back by 3 positions.
+
+### Summary
+This program demonstrates the Caesar Cipher, a basic encryption technique where each letter in a string is shifted by a certain number of places in the alphabet. The main function provides an interface for users to encrypt and decrypt their text using a specified key. The decryption is simply the reverse of encryption, achieved by shifting the letters back by the same key.

@@ -1,0 +1,183 @@
+This C++ program implements the **Affine Cipher**, a type of substitution cipher that uses mathematical operations to encrypt and decrypt text. The program can handle both uppercase and lowercase letters, while non-alphabetic characters remain unchanged.
+
+### Code Explanation
+
+#### 1. **Including Header Files**
+```cpp
+#include <iostream>
+#include <string>
+#include <cctype>
+using namespace std;
+```
+- `#include <iostream>`: Allows for input and output operations.
+- `#include <string>`: Provides support for string operations.
+- `#include <cctype>`: Provides functions to check character types (e.g., whether a character is uppercase, lowercase, etc.).
+
+#### 2. **Finding Modular Inverse**
+```cpp
+int modInverse(int a, int m) {
+    a = a % m;
+    for (int x = 1; x < m; x++) {
+        if ((a * x) % m == 1)
+            return x;
+    }
+    return -1;
+}
+```
+- **Purpose**: This function finds the modular inverse of `a` under modulo `m`.
+- **Parameters**:
+  - `a`: The number for which the modular inverse is to be found.
+  - `m`: The modulus.
+- **Explanation**:
+  - The modular inverse of `a` under `m` is a number `x` such that `(a * x) % m == 1`.
+  - The function iterates through all possible values from `1` to `m-1` to find such an `x`.
+  - If no such `x` exists, the function returns `-1`.
+
+#### 3. **Encrypting a Single Character**
+```cpp
+char encryptChar(char ch, int a, int b) {
+    if (isupper(ch)) {
+        return char(((a * (ch - 'A') + b) % 26) + 'A');
+    } else if (islower(ch)) {
+        return char(((a * (ch - 'a') + b) % 26) + 'a');
+    }
+    return ch;
+}
+```
+- **Purpose**: This function encrypts a single character using the Affine Cipher formula: `E(x) = (a * x + b) % 26`.
+- **Parameters**:
+  - `ch`: The character to be encrypted.
+  - `a`: The multiplier in the cipher (must be coprime with 26).
+  - `b`: The shift in the cipher.
+- **Explanation**:
+  - For uppercase letters (`'A'` to `'Z'`):
+    - Convert `ch` to its position in the alphabet (`ch - 'A'`), apply the formula, and convert back to a character.
+  - For lowercase letters (`'a'` to `'z'`):
+    - The process is the same, but with respect to `'a'`.
+  - Non-alphabetic characters are returned unchanged.
+
+#### 4. **Decrypting a Single Character**
+```cpp
+char decryptChar(char ch, int a, int b) {
+    int a_inv = modInverse(a, 26);
+    if (a_inv == -1) {
+        cout << "Modular inverse does not exist. Decryption is not possible." << endl;
+        exit(1);
+    }
+    if (isupper(ch)) {
+        return char(((a_inv * ((ch - 'A') - b + 26)) % 26) + 'A');
+    } else if (islower(ch)) {
+        return char(((a_inv * ((ch - 'a') - b + 26)) % 26) + 'a');
+    }
+    return ch;
+}
+```
+- **Purpose**: This function decrypts a single character using the inverse of the Affine Cipher formula: `D(y) = a_inv * (y - b) % 26`.
+- **Parameters**:
+  - `ch`: The character to be decrypted.
+  - `a`: The multiplier in the cipher.
+  - `b`: The shift in the cipher.
+- **Explanation**:
+  - First, it finds the modular inverse of `a` using the `modInverse` function.
+  - For uppercase and lowercase letters, it applies the decryption formula, ensuring to add `26` before taking modulo to avoid negative results.
+  - Non-alphabetic characters are returned unchanged.
+  - If the modular inverse does not exist, the program prints an error message and exits.
+
+#### 5. **Encrypting a String**
+```cpp
+string encrypt(string text, int a, int b) {
+    string cipherText;
+    for (char ch : text) {
+        cipherText += encryptChar(ch, a, b);
+    }
+    return cipherText;
+}
+```
+- **Purpose**: This function encrypts an entire string using the `encryptChar` function.
+- **Parameters**:
+  - `text`: The plaintext string to be encrypted.
+  - `a`: The multiplier in the cipher.
+  - `b`: The shift in the cipher.
+- **Explanation**:
+  - The function iterates through each character in the input string, encrypts it, and appends the result to `cipherText`.
+
+#### 6. **Decrypting a String**
+```cpp
+string decrypt(string cipherText, int a, int b) {
+    string plainText;
+    for (char ch : cipherText) {
+        plainText += decryptChar(ch, a, b);
+    }
+    return plainText;
+}
+```
+- **Purpose**: This function decrypts an entire string using the `decryptChar` function.
+- **Parameters**:
+  - `cipherText`: The encrypted string to be decrypted.
+  - `a`: The multiplier in the cipher.
+  - `b`: The shift in the cipher.
+- **Explanation**:
+  - The function iterates through each character in the input string, decrypts it, and appends the result to `plainText`.
+
+#### 7. **Main Function**
+```cpp
+int main() {
+    string text;
+    int a, b;
+
+    cout << "Enter the text to be encrypted: ";
+    getline(cin, text);
+
+    cout << "Enter the value for 'a' (should be coprime with 26): ";
+    cin >> a;
+    cout << "Enter the value for 'b': ";
+    cin >> b;
+
+    if (modInverse(a, 26) == -1) {
+        cout << "'a' is not coprime with 26. Please enter a valid value." << endl;
+        return 1;
+    }
+
+    string encrypted = encrypt(text, a, b);
+    cout << "Encrypted Text: " << encrypted << endl;
+
+    string decrypted = decrypt(encrypted, a, b);
+    cout << "Decrypted Text: " << decrypted << endl;
+
+    return 0;
+}
+```
+- **Purpose**: The main function handles input, encryption, and decryption.
+- **Steps**:
+  1. **Input**:
+     - The user is prompted to enter the text to be encrypted.
+     - The user then inputs the values for `a` and `b`, which are used in the Affine Cipher.
+  2. **Validation**:
+     - The program checks if `a` is coprime with 26 by attempting to find its modular inverse.
+     - If the modular inverse does not exist, the program prints an error and exits.
+  3. **Encryption**:
+     - The program calls the `encrypt` function to encrypt the input text.
+     - The encrypted text is printed.
+  4. **Decryption**:
+     - The program calls the `decrypt` function to decrypt the encrypted text.
+     - The decrypted text is printed to verify correctness.
+
+### Example Execution
+
+Suppose the input is:
+```
+Enter the text to be encrypted: AffineCipher
+Enter the value for 'a' (should be coprime with 26): 5
+Enter the value for 'b': 8
+```
+
+- **Encryption**:
+  - Each letter in `"AffineCipher"` is encrypted using `a = 5` and `b = 8`.
+  - For example, `A` (position 0) is encrypted to `I` (position 8), `f` (position 5) to `d` (position 3), and so on.
+  - The encrypted text might be `"IppykmMqxjpw"`.
+
+- **Decryption**:
+  - The encrypted text `"IppykmMqxjpw"` is decrypted back to `"AffineCipher"` using the same values of `a` and `b`.
+
+### Summary
+This program demonstrates how to implement the Affine Cipher, including both encryption and decryption. The use of modular arithmetic ensures that the cipher works correctly with both uppercase and lowercase letters, while non-alphabetic characters are left unchanged. The main function provides a simple interface for users to encrypt and decrypt their text.
